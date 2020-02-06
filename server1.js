@@ -5,55 +5,40 @@ let app = require('./myExpress');
 let ejs = require('ejs');
 
 app.init();
-app.engine('ejs', function (filePath, options, callback) { // define the template engine
-  fs.readFile(filePath, function (err, content) {
-    if (err) return callback(new Error(err));
-    // this is an extremely simple template engine
-    var rendered = content.toString().replace('#title#', ''+ options.title +'')
-    .replace('#message#', ''+ options.message +'');
-    return callback(null, rendered);
-  });
+// app.engine('ejs', function (filePath, options, callback) { // define the template engine
+//   fs.readFile(filePath, function (err, content) {
+//     if (err) return callback(new Error(err));
+//     // this is an extremely simple template engine
+//     var rendered = content.toString().replace('#title#', ''+ options.title +'')
+//     .replace('#message#', ''+ options.message +'');
+//     return callback(null, rendered);
+//   });
+// });
+
+ app.set("views", __dirname + "/views");
+ app.set("img", __dirname + "/img");
+ app.set('view engine','ejs');
+
+ app.get("/login", function(req, res) {
+  console.log('app.get("/login/req.user',req.user);
+  res.render("login.ejs", { user: req.user, message: ' ' , SelForm: 'formlogin', notUser: undefined});
 });
 
- app.setApp("views", __dirname + "/views");
- app.setApp("img", __dirname + "/img");
- app.setApp('view engine','ejs');
 
 http.createServer(function (request, response) {
-    console.log('request ', request.url);
+
+app.postForm(request, function(err,body){
+  console.log(body);
+})
 
 
+let filePath = '.' + request.url;
+ let extname = String(path.extname(filePath)).toLowerCase();
 
-    //app.set('view engine','ejs1');
-
-
-    let filePath = '.' + request.url;
-
-    console.log('filePath',filePath,'app.dispatch',app.dispatch(request.url));
- // let extname = String(path.extname(request.url)).toLowerCase();
-    filePath = app.dispatch(request.url,'');
-
-    // if (filePath == './') {
-    //         // // запускаем главную страницу
-    //         filePath = app.dispatch(filePath);
-    //         console.log('filePath',filePath);
-    // }
-    // else
-    // {    
-    //   filePath = app.dispatch(request.url);
-    //   console.log('filePath',filePath,'app.dispatch',app.dispatch(request.url));
-    // }
-    // if (filePath == './login') {
-    //   filename = './views/login.ejs';
-    //     console.log(filePath );
-    // }
-    //console.log('app',app);
-            // инициализируем роутер
-
-       
-
-
-    let extname = String(path.extname(filePath)).toLowerCase();
+    filePath = app.dispatch(request.url,extname);
+ 
+   extname = String(path.extname(filePath)).toLowerCase();
+  //  console.log('extname',extname)
     let mimeTypes = {
         '.html': 'text/html',
         '.js': 'text/javascript',
@@ -75,6 +60,16 @@ http.createServer(function (request, response) {
     //console.log('mimeTypes[extname]',extname,mimeTypes[extname]);
     let contentType = mimeTypes[extname] || 'application/octet-stream';
 
+    // if(filePath == './views/login' )
+    // {  
+    //   app.render("login.ejs", { user: 'req.user', message: ' ' , SelForm: 'formlogin', notUser: undefined});
+    //     console.log('filePathLogin',filePath);
+    //     return;
+
+    // }
+    //console.log('Я тут!!!',filePath);
+    if(filePath == './views/login' )
+      {console.log('Я тут!!!');}
     fs.readFile(filePath, function(error, content) {
     // console.log(content);
         if (error) {
@@ -91,11 +86,11 @@ http.createServer(function (request, response) {
         }
         else {
           response.writeHead(200, { 'Content-Type': contentType });
-
-            if(filePath == './views/login.ejs' || './views/login.css')
+            if(filePath.includes('./views'))
+           //if(filePath == './views/login.ejs' ||  './login')
               {   
-              //   console.log('contentType',contentType);
-              // response.writeHead(200, { 'Content-Type': contentType });
+               //  console.log('Я тут!!!');
+               response.writeHead(200, { 'Content-Type': contentType });
                 let filename =  filePath;       
                  let htmlContent = fs.readFileSync(filename, 'utf8');
                 let htmlRenderized = ejs.render(htmlContent, {filename: 'login',  user: undefined, message: ' ' , SelForm: 'formlogin', notUser: undefined});
