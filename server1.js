@@ -1,12 +1,13 @@
-const port = 8000;
+
+const port = 7000;
 const HOST = 'localhost';
+const WebSocket = require("ws");
 let http = require('http');
 let fs = require('fs');
 let path = require('path');
 let app = require('./myExpress');
 let ejs = require('ejs');
 let serverDB = require("./serverDB");
-let usersOnline=[];
 
 app.init();
 // app.engine('ejs', function (filePath, options, callback) { // define the template engine
@@ -31,11 +32,16 @@ app.init();
 const handleGreetRequest = (request, response) => {
   request.logIn = function(user){
     if(user)
-    {  
+    { 
+      // if (request.session){console.log('request.session')}
+     // request.user = user;
+     //s = request.Session();
         if(usersOnline.findIndex(x => x.id==user.id) ===-1)
         {usersOnline.push(user);}
-        console.log("local");
-         response.redirect("/")
+       // console.log('request.user!!!!!!!!!!!!!!!',request.user);
+         response.redirect("/");
+      //   console.log('request.user---!!!!!!!!!!!!!!!',request.user);
+        
     }
     };
   
@@ -137,11 +143,166 @@ const onRequest = (req, res) => {
     res.end('Страница не найдена.');
   }
 };
-const serverHttp = require("http").createServer(onRequest);
-// http.createServer(function (request, response) {
- 
+///WebSocket
+let serverClass = require("./serverClass");
+let usersOnline=[];
+// const session = require("express-session");
+// let sessionParser = session({
+//   secret: "mysecret",
+//   store: new FileStore(),
+//   cookie: {
+//     path: "/",
+//     httpOnly: true,
+//     maxAge: 60 * 60 * 1000
+//   },
+//   resave: true,
+//   saveUninitialized: true
+// });
+const server = new WebSocket.Server({
+  port,
+  // verifyClient: (info, done) => {
+  //   sessionParser(info.req, {}, () => {
+  //     done(info.req.session);
+  //   });
+  // },
+  noServer: false
+});
+let _idChat = 0;
 
-// }).listen(8125);
+server.on("connection", function(ws, request) {
+console.log("server.on(connection)");
+  let commands = {};
+  //добавление/изменение пользователей в чате
+  commands.insertUserInChat=  serverClass.insertUserInChat;
+  //выбор пользователей в чате
+  commands.checkUsersInChat=  serverClass.checkUsersInChat;
+  //история чата
+  commands.History=  serverClass.History;
+  //фильтр пользователей
+  commands.getFilterUsers=  serverClass.getFilterUsers;
+  //сохранение сообщений
+  commands.saveMessage=  serverClass.saveMessage;
+
+   ws.on("message", message => {
+
+     message = JSON.parse(message);
+     console.log('messageServer',message);
+     //закрытие сокета с клиента вводом строки exit
+     if (message.value === "exit") {
+       ws.close();
+       console.log("Exit " + server);
+      } 
+     else   
+    //обработка действий клиента
+    console.log('message.sys1',message.sys);
+     if (message.sys === "Yes") 
+     {
+     // console.log('message.sys',message.sys);
+      commands[message.act](function(err, idChat,wsSend) {
+      //  console.log('^^^^^^^^^^^^^^',message.act,err);
+       if(err){console.log('err',message.act,err);}
+        if(idChat) { _idChat = idChat;} else {_idChat=0;}
+        if(wsSend) 
+         {
+          if (message.act == 'getFilterUsers')
+               {
+                wsSend = JSON.parse(wsSend); 
+                 wsSend.usersOnline = usersOnline; 
+                 wsSend.idChat= _idChat;
+                 wsSend = JSON.stringify(wsSend); 
+               }
+               ws.send(wsSend);
+        }
+      },message, _idChat,ws.user.id);
+    } 
+    //рассылка сообщений пользователям
+    else 
+    {
+         server.clients.forEach(client => {
+         if (client.readyState === WebSocket.OPEN) {
+            if ( message.online || client.user.id == ws.user.id || message.usersSend.split(',').findIndex(x => x==client.user.id)  !=-1) 
+                {  
+                  console.log('рассылка', client.user.id);
+                client.send(
+                  JSON.stringify({
+                    cell: "form",
+                    message
+                  })
+                );
+                }
+         }
+       });
+       //сохранение сообщений 
+       if(!message.online )
+       {
+       //console.log('Я тут saveMessage!!');
+       commands['saveMessage'](function(err,all)
+       {
+          //console.log('saveMessage!!!!!!!!!!!!!!!!!!!!!!!!!');
+         if(err){
+                 console.log('err',err);
+                 return;
+               }
+              },message,ws.user.id);
+       }
+
+     }
+    console.log('server.clients.size',server.clients.size);
+ 
+   });
+   //закрытие сокета
+   ws.on("close", function() {
+    if(ws.user)
+    {
+      try
+      {
+       usersOnline.splice( usersOnline.findIndex(x => x.id==ws.user.id), 1 );
+       request.logout();
+       ws.user = null;
+      }
+      catch
+      {}
+    }
+   });
+
+  // if (request.session.passport && ws.user != request.session.passport.user)
+  console.log('request.user',request.user)
+  if(request.user)
+   {
+      ws.user =request.user ; }
+
+    //пользователь зашел
+    if (ws.user)
+    {
+     // ws.user = _user;
+      console.log('sendUser!',ws.user);
+      ws.send(
+        JSON.stringify({
+          cell: "user",
+          user: ws.user
+        }));
+        //добавление пользователя в usersOnline, если его там нет
+        if(usersOnline.findIndex(x => x.id==ws.user.id) ===-1)
+        {usersOnline.push(ws.user);}
+    }
+    //заполнение таблицы пользователей
+    commands['getFilterUsers'](function(err, idChat,wsSend) {
+      if(err){return;}
+        if(idChat)  _idChat = idChat;
+        if(wsSend) 
+        {
+                wsSend = JSON.parse(wsSend); 
+                wsSend.usersOnline = usersOnline; 
+                wsSend.idChat= _idChat;
+                wsSend = JSON.stringify(wsSend); 
+              ws.send(wsSend);
+        }
+      },null, _idChat,(ws.user?ws.user.id:0));
+
+ });
+
+
+const serverHttp = require("http").createServer(onRequest);
 
 serverHttp.listen(8125, function() {
   console.log(`Listening on http://${HOST}:8125`);
