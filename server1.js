@@ -1,8 +1,12 @@
+const port = 8000;
+const HOST = 'localhost';
 let http = require('http');
 let fs = require('fs');
 let path = require('path');
 let app = require('./myExpress');
 let ejs = require('ejs');
+let serverDB = require("./serverDB");
+let usersOnline=[];
 
 app.init();
 // app.engine('ejs', function (filePath, options, callback) { // define the template engine
@@ -19,23 +23,26 @@ app.init();
  app.set("img", __dirname + "/img");
  app.set('view engine','ejs');
 
- app.get("/login", function(req, res) {
-  console.log('app.get("/login/req.user',req.user);
-  res.render("login.ejs", { user: req.user, message: ' ' , SelForm: 'formlogin', notUser: undefined});
-});
-
-
-http.createServer(function (request, response) {
-
-app.postForm(request, function(err,body){
-  console.log(body);
-})
-
-
+//  app.get("/login", function(req, res) {
+//   console.log('app.get("/login/req.user',req.user);
+//   res.render("login.ejs", { user: req.user, message: ' ' , SelForm: 'formlogin', notUser: undefined});
+// });
+// Request handler for /greet end point.
+const handleGreetRequest = (request, response) => {
+  request.logIn = function(user){
+    if(user)
+    {  
+        if(usersOnline.findIndex(x => x.id==user.id) ===-1)
+        {usersOnline.push(user);}
+        console.log("local");
+         response.redirect("/")
+    }
+    };
+  
 let filePath = '.' + request.url;
- let extname = String(path.extname(filePath)).toLowerCase();
+ //let extname = String(path.extname(filePath)).toLowerCase();
 
-    filePath = app.dispatch(request.url,extname);
+    filePath = app.dispatch(request.url,'');
  
    extname = String(path.extname(filePath)).toLowerCase();
   //  console.log('extname',extname)
@@ -59,17 +66,36 @@ let filePath = '.' + request.url;
     };
     //console.log('mimeTypes[extname]',extname,mimeTypes[extname]);
     let contentType = mimeTypes[extname] || 'application/octet-stream';
-
+    //console.log('request.method',request.method );
+    if (request.method === 'POST') {
+    app.postForm(request, function(err,body){
+      if(err){console.log(err);return;}
+      console.log(body, body.email);
+      serverDB.login(body.email,body.password,function(err,user){
+        //console.log(user);
+        if (err) {
+          console.log(err);
+          return;
+        }
+        if (!user) {
+         // app.ejsRender(response,filePath,fs,ejs,content,contentType);
+          // res.render("login.ejs", { user: undefined, message: "Укажите правильный email или пароль!", SelForm: 'formlogin', notUser: undefined});
+          // req.logout();
+          // return;
+          content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: undefined, message: "Укажите правильный email или пароль!", SelForm: 'formlogin', notUser: undefined});
+          console.log('content',contentType);
+          app.Render(response,content,contentType);
+          //console.log('Я тут!POST');
+          //request.logout();
+          return;
+        }
+        request.logIn(user);
+      })
+    })
+  }
+  else
     // if(filePath == './views/login' )
-    // {  
-    //   app.render("login.ejs", { user: 'req.user', message: ' ' , SelForm: 'formlogin', notUser: undefined});
-    //     console.log('filePathLogin',filePath);
-    //     return;
-
-    // }
-    //console.log('Я тут!!!',filePath);
-    if(filePath == './views/login' )
-      {console.log('Я тут!!!');}
+    //   {console.log('Я тут!!!');}
     fs.readFile(filePath, function(error, content) {
     // console.log(content);
         if (error) {
@@ -84,27 +110,40 @@ let filePath = '.' + request.url;
                 response.end('Sorry, check with the site admin for error: '+error.code+' ..\n');
             }
         }
-        else {
-          response.writeHead(200, { 'Content-Type': contentType });
-            if(filePath.includes('./views'))
-           //if(filePath == './views/login.ejs' ||  './login')
+        else 
+        {
+          //app.ejsRender(response,filePath,fs,ejs,content,contentType);
+             // response.writeHead(200, { 'Content-Type': contentType });
+             if(filePath.includes('ejs'))
               {   
-               //  console.log('Я тут!!!');
-               response.writeHead(200, { 'Content-Type': contentType });
-                let filename =  filePath;       
-                 let htmlContent = fs.readFileSync(filename, 'utf8');
-                let htmlRenderized = ejs.render(htmlContent, {filename: 'login',  user: undefined, message: ' ' , SelForm: 'formlogin', notUser: undefined});
-                content =htmlRenderized;
-             // response.end(htmlRenderized, 'utf-8');
-            }
-              response.end(content, 'utf-8');
-      // else
-      // {
-      //   // response.writeHead(200, { 'Content-Type': contentType });
-      //   response.end(content, 'utf-8');
-      // }
+                 content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: undefined, message: ' ' , SelForm: 'formlogin', notUser: undefined});
+             }
+             //response.end(content, 'utf-8');
+               app.Render(response,content,contentType);
+              // console.log('Я тут!!!!GET');
         }
     });
+}
+const onRequest = (req, res) => {
+  if (req.url.startsWith('/') || req.url.startsWith('/login') ) {
+    res.redirect = function(location)
+        {   
+          res.writeHead(302,  {Location: location})
+          res.end();
+        }
+    handleGreetRequest(req, res);
+  } else {
+    res.statusCode = 404;
+    res.end('Страница не найдена.');
+  }
+};
+const serverHttp = require("http").createServer(onRequest);
+// http.createServer(function (request, response) {
+ 
 
-}).listen(8125);
-console.log('Server running at http://127.0.0.1:8125/');
+// }).listen(8125);
+
+serverHttp.listen(8125, function() {
+  console.log(`Listening on http://${HOST}:8125`);
+});
+//console.log('Server running at http://127.0.0.1:8125/');

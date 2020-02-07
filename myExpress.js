@@ -4,7 +4,7 @@ let http = require('http');
 
 let resolve = pathR.resolve;
 let methods = getBasicNodeMethods();
-let View = require('./src/view');
+//let View = require('./src/view');
 const { parse } = require('querystring');
 
 let res = Object.create(http.ServerResponse.prototype)
@@ -43,7 +43,7 @@ let app={
     // }
   },
   defaultConfiguration: function defaultConfiguration() {
-    this.set('view', View);
+  //  this.set('view', View);
     console.log('views', resolve('views'), resolve('img'))
     this.set('views', resolve('views'));
   },
@@ -107,117 +107,117 @@ set: function set(setting, val) {
 //console.log('settings',this.settings);
   return this;
 },
-render: function render(name, options, callback) {
-  var cache = this.cache;
-  var done = callback;
-  var engines = this.engines;
-  var opts = options;
-  var renderOptions = {};
-  var view;
+// render: function render(name, options, callback) {
+//   var cache = this.cache;
+//   var done = callback;
+//   var engines = this.engines;
+//   var opts = options;
+//   var renderOptions = {};
+//   var view;
 
-  // support callback function as second arg
-  if (typeof options === 'function') {
-    done = options;
-    opts = {};
-  }
+//   // support callback function as second arg
+//   if (typeof options === 'function') {
+//     done = options;
+//     opts = {};
+//   }
 
-  // merge app.locals
-  merge(renderOptions, this.locals);
+//   // merge app.locals
+//   merge(renderOptions, this.locals);
 
-  // merge options._locals
-  if (opts._locals) {
-    merge(renderOptions, opts._locals);
-  }
+//   // merge options._locals
+//   if (opts._locals) {
+//     merge(renderOptions, opts._locals);
+//   }
 
-  // merge options
-  merge(renderOptions, opts);
+//   // merge options
+//   merge(renderOptions, opts);
 
-  // set .cache unless explicitly provided
-  if (renderOptions.cache == null) {
-    renderOptions.cache = this.enabled('view cache');
-  }
+//   // set .cache unless explicitly provided
+//   if (renderOptions.cache == null) {
+//     renderOptions.cache = this.enabled('view cache');
+//   }
 
-  // primed cache
-  if (renderOptions.cache) {
-    view = cache[name];
-  }
+//   // primed cache
+//   if (renderOptions.cache) {
+//     view = cache[name];
+//   }
 
-  // view
-  if (!view) {
-    let View = this.get('view');
+//   // view
+//   if (!view) {
+//     let View = this.get('view');
 
-    view = new View(name, {
-      defaultEngine: this.get('view engine'),
-      root: this.get('views'),
-      engines: engines
-    });
-    // console.log('view',view,this.get('views'));
-    // return;
-    if (!view.path) {
-      let dirs = Array.isArray(view.root) && view.root.length > 1
-        ? 'directories "' + view.root.slice(0, -1).join('", "') + '" or "' + view.root[view.root.length - 1] + '"'
-        : 'directory "' + view.root + '"'
-      let err = new Error('Failed to lookup view "' + name + '" in views ' + dirs);
-      err.view = view;
-      return done(err);
-    }
+//     view = new View(name, {
+//       defaultEngine: this.get('view engine'),
+//       root: this.get('views'),
+//       engines: engines
+//     });
+//     // console.log('view',view,this.get('views'));
+//     // return;
+//     if (!view.path) {
+//       let dirs = Array.isArray(view.root) && view.root.length > 1
+//         ? 'directories "' + view.root.slice(0, -1).join('", "') + '" or "' + view.root[view.root.length - 1] + '"'
+//         : 'directory "' + view.root + '"'
+//       let err = new Error('Failed to lookup view "' + name + '" in views ' + dirs);
+//       err.view = view;
+//       return done(err);
+//     }
 
-    // prime the cache
-    if (renderOptions.cache) {
-      cache[name] = view;
-    }
-  }
+//     // prime the cache
+//     if (renderOptions.cache) {
+//       cache[name] = view;
+//     }
+//   }
 
-  // render
- let req = this.req;
- let self = res.render;
- console.log('self',self,res);
-  done = done || function (err, str) {
-   // if (err) return req.next(err);
-   // self.send(str);
-  };
-  //console.log( 'tryRender', 'renderOptions',renderOptions,'done', done);
-  tryRender(view, renderOptions, done);
-}
-,
-engine: function engine(ext, fn) {
-  if (typeof fn !== 'function') {
-    throw new Error('callback function required');
-  }
+//   // render
+//  let req = this.req;
+//  let self = res.render;
+//  console.log('self',self,res);
+//   done = done || function (err, str) {
+//    // if (err) return req.next(err);
+//    // self.send(str);
+//   };
+//   //console.log( 'tryRender', 'renderOptions',renderOptions,'done', done);
+//   tryRender(view, renderOptions, done);
+// }
+// ,
+// engine: function engine(ext, fn) {
+//   if (typeof fn !== 'function') {
+//     throw new Error('callback function required');
+//   }
 
-  // get file extension
-  var extension = ext[0] !== '.'
-    ? '.' + ext
-    : ext;
+//   // get file extension
+//   var extension = ext[0] !== '.'
+//     ? '.' + ext
+//     : ext;
 
-  // store engine
-  this.engines[extension] = fn;
+//   // store engine
+//   this.engines[extension] = fn;
 
-  return this;
-},
-dispatchPattern: function(path) {
-     let site='';
-  // количество маршрутов в массиве
-  var i = this._paths.length;
- //console.log(i);
-  // цикл до конца
-  while( i-- ) {
+//   return this;
+// },
+// dispatchPattern: function(path) {
+//      let site='';
+//   // количество маршрутов в массиве
+//   var i = this._paths.length;
+//  //console.log(i);
+//   // цикл до конца
+//   while( i-- ) {
      
-      // если запрошенный путь соответствует какому-либо
-      // маршруту, смотрим есть ли маршруты
-      var args = path.match(this._paths[i].pattern);
-     // console.log(args,'args.slice(1)',args.slice(1));
-      // если есть аргументы
-      if( args ) {
+//       // если запрошенный путь соответствует какому-либо
+//       // маршруту, смотрим есть ли маршруты
+//       var args = path.match(this._paths[i].pattern);
+//      // console.log(args,'args.slice(1)',args.slice(1));
+//       // если есть аргументы
+//       if( args ) {
          
-          // вызываем обработчик из объекта, передавая ему аргументы
-          // args.slice(1) отрезает всю найденную строку
-          site=this._paths[i].callback.apply(this,args.slice(1))
-      }
-  }
-  //console.log('site',site);
-  return site;
-},
+//           // вызываем обработчик из объекта, передавая ему аргументы
+//           // args.slice(1) отрезает всю найденную строку
+//           site=this._paths[i].callback.apply(this,args.slice(1))
+//       }
+//   }
+//   //console.log('site',site);
+//   return site;
+// },
 // lazyrouter: function lazyrouter() {
 //   if (!this._router) {
 //     this._router = new Router({
@@ -235,12 +235,12 @@ dispatchPattern: function(path) {
 //     //  window.location.hash = './index.html';
 //       return './index.html';
 // },
-enabled: function enabled(setting) {
-  return Boolean(this.set(setting));
-},
+// enabled: function enabled(setting) {
+//   return Boolean(this.set(setting));
+// },
 postForm: function(request, cb)
 {
-  if (request.method === 'POST') {
+  //if (request.method === 'POST') {
     const FORM_URLENCODED = 'application/x-www-form-urlencoded';
     if(request.headers['content-type'] === FORM_URLENCODED) {
     let body = '';
@@ -253,8 +253,26 @@ postForm: function(request, cb)
     else{
       cb(null,null);
     }
-  };  
+ // };  
+},
+Render: function(response,content,contentType){
+  response.writeHead(200, { 'Content-Type': contentType });
+  response.end(content, 'utf-8');
+},
+ejsRenderOld: function(response,filePath,fs,ejs,content,contentType){
+  response.writeHead(200, { 'Content-Type': contentType });
+  if(filePath.includes('./views'))
+    {   
+     //  console.log('Я тут!!!');
+     response.writeHead(200, { 'Content-Type': contentType });
+      let filename =  filePath;       
+       let htmlContent = fs.readFileSync(filename, 'utf8');
+      let htmlRenderized = ejs.render(htmlContent, {filename: 'login',  user: undefined, message: ' ' , SelForm: 'formlogin', notUser: undefined});
+      content =htmlRenderized;
+  }
+    response.end(content, 'utf-8');
 }
+
 }
 module.exports = app;
 methods.forEach(function(method){
@@ -275,45 +293,45 @@ return;
     return this;
   };
 });
-function routerMethod(){
-  var handles = flatten(slice.call(arguments));
+// function routerMethod(){
+//   var handles = flatten(slice.call(arguments));
 
-  for (var i = 0; i < handles.length; i++) {
-    var handle = handles[i];
+//   for (var i = 0; i < handles.length; i++) {
+//     var handle = handles[i];
 
-    if (typeof handle !== 'function') {
-      var type = toString.call(handle);
-      var msg = 'Route.' + method + '() requires a callback function but got a ' + type
-      throw new Error(msg);
-    }
+//     if (typeof handle !== 'function') {
+//       var type = toString.call(handle);
+//       var msg = 'Route.' + method + '() requires a callback function but got a ' + type
+//       throw new Error(msg);
+//     }
 
-    //debug('%s %o', method, this.path)
+//     //debug('%s %o', method, this.path)
 
-    var layer = Layer('/', {}, handle);
-    layer.method = method;
+//     var layer = Layer('/', {}, handle);
+//     layer.method = method;
 
-    this.methods[method] = true;
-    this.stack.push(layer);
-  }
+//     this.methods[method] = true;
+//     this.stack.push(layer);
+//   }
 
-  return this;
-} 
+//   return this;
+// } 
 
-function tryRender(view, options, callback) {
-  try {
-    view.render(options, callback);
-  } catch (err) {
-    callback(err);
-  }
-}
-function merge(a, b){
-  if (a && b) {
-    for (var key in b) {
-      a[key] = b[key];
-    }
-  }
-  return a;
-};
+// function tryRender(view, options, callback) {
+//   try {
+//     view.render(options, callback);
+//   } catch (err) {
+//     callback(err);
+//   }
+// }
+// function merge(a, b){
+//   if (a && b) {
+//     for (var key in b) {
+//       a[key] = b[key];
+//     }
+//   }
+//   return a;
+// };
 function getBasicNodeMethods() {
   return [
     'get',
