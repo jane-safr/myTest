@@ -73,18 +73,10 @@ function(cb, message)
 getFilterUsers:
 function(cb, message,idChat,userId)
 {
-  // let strFilter;
-  // if(message==null)
-  // {
-  //   strFilter = '';
-  // }
-  // else
-  // {
-  //   strFilter = message.strFilter;
-  // }
+  console.log("serverClass.getFilterUsers",userId);
  serverDB.getFilterUsers(function(err, all) {
   if (err) {
-   console.log("err getFilterUsers",err);
+   console.log("err getFilterUsers1",err);
    cb(err,null);
   }
   let wsSend =
@@ -97,6 +89,31 @@ function(cb, message,idChat,userId)
  
    cb('',null,wsSend);
  },userId,message==null?'':message.strFilter);
+
+},
+login:
+function(cb,email,password)
+{
+ // console.log('Я тут!',email,password);
+ serverDB.login(email,password,function(err, all) {
+  if (err) {
+   console.log("err login",err);
+   cb(err,null);
+  }
+ console.log('Я тут!all',all);
+
+  let wsSend =
+ 
+     JSON.stringify({
+       id:     all.id,
+       email:  all.email,
+       login:  all.login,
+       fio:   all.fio
+
+     })
+ 
+   cb('',all?wsSend:false);
+ });
 
 },
 // getFilterUsersOld:

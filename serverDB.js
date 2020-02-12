@@ -239,7 +239,48 @@ login: function( email, password, done){
   return done(null, user);
   db.close();
  });
-}
+},
+change: 
+function( done, email,password, password1,password2){
+  console.log('local-change');
+  
+  if(password1!=password2)
+  {
+    msg ='Пароль и подтверждение пароля не совпадают!';
+    console.log('msg',msg);
+    return done(null, false, msg);
+  }
+  
+  let db = new sqlite3.Database(path);
+  db.get("SELECT * FROM users WHERE email = ? and password = ? ", [email],[password],
+  function(err, row){
+  if(err){
+  console.log('err',err);
+   return done(err);
+  }
+  
+  if(!row){
+    msg ='Не правильный email или пароль! ';
+       console.log('msg',msg);
+        return done(null, false, msg);
+  }
+  let user = row;
+  db.run(`UPDATE users SET password = ?  where email = ?`, [password1,email], function(err) {
+    if (err) {
+      return console.log('err.message',err.message);
+    }
+    msg ='Пароль изменен! ';
+    console.log('msg',msg);
+    return done(null, user,msg);
+  })
+  
+  });
+  
+  
+  db.close();
+  
+  
+   }
 }
 
 
