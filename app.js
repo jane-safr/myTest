@@ -24,11 +24,11 @@ function printMessage(value) {
       user= change.user;
       welcome.innerHTML =  user.fio;
       logout.innerHTML =   ' Выйти';
-      logout.href = "http://"+logout.host + '/logout';
+      logout.href = "http://"+login.host + '/logout';
 
     }
     else
-    {logout.innerHTML = 'Войти'; welcome.innerHTML = ''; logout.href = "http://"+logout.host + '/login'; }
+    {logout.innerHTML = 'Войти'; welcome.innerHTML = ''; logout.href = "http://"+login.host + '/login'; }
     return;
   }
   if(!user){return;}

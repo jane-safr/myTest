@@ -23,12 +23,39 @@ let app={
   // },
   // engines: []
   // ,
-  init: function() {
+  init: function(request, response)  {
     this.cache = {};
     this.engines = {};
     this.settings = {};
 
     this.defaultConfiguration();
+      // Функции регистрация /выход пользователя
+  request.logIn = function(user){
+
+    const sessionID = app.getCookie('session-id',request.headers.cookie);
+    const cookieToken =  app.getCookie('csrf-token',request.headers.cookie);
+   // console.log('user',user);
+    if(user)
+    { 
+     
+      console.log("зарегистрировано с действительными учетными данными");
+
+      // Generating Session ID and Token
+      const SESSION_ID = process.env.REFRESH_TOKEN_SECRET;
+      const CSRF_TOKEN = process.env.ACCESS_TOKEN_SECRET;
+      if (!sessionID && !cookieToken) {
+        console.log(`Generated Session ID: ${SESSION_ID}, CSRF Token: ${CSRF_TOKEN}`);
+        response.setHeader('Set-Cookie', [`session-id=${SESSION_ID}`, `time=${Date.now()}`, `csrf-token=${CSRF_TOKEN}`]);
+    } else {
+        console.log('POST /home Some Session ID and CSRF Token Found')
+    }
+    }
+    };
+  request.logout = function(user)    {
+      request.headers.cookie = null;
+      user = null;
+     // ws.user = null;
+    }
     //this.set('views', resolve('views'));
   
     //this.defaultConfiguration();
@@ -44,7 +71,7 @@ let app={
   },
   defaultConfiguration: function defaultConfiguration() {
   //  this.set('view', View);
-    console.log('views', resolve('views'), resolve('img'))
+    //console.log('views', resolve('views'), resolve('img'))
     this.set('views', resolve('views'));
   },
   // set: function(setting,val){
@@ -56,9 +83,21 @@ let app={
   // },
   dispatch: function(path,extname) {
        let site='';
+        //       if (extname == '')
+        // {
+        //   console.log('dispatchExtname',path,request.headers.referer);
+        // }
           if (path == '/')
        {
          site = './index.html';
+       }
+       else
+       if (extname == '')
+       {
+        //site = request.headers.referer;
+       // console.log('dispatchExtname1',path,request.headers);
+        site =  './views/login.ejs';
+       //  console.log('dispatchExtname',path,request.headers.referer);
        }
        else
       if (fs.existsSync('./views' + path + '.ejs' )) 
@@ -73,6 +112,24 @@ let app={
        else
        site = '.'+path;
     return site;
+},
+mimeTypes: {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.wav': 'audio/wav',
+  '.mp4': 'video/mp4',
+  '.woff': 'application/font-woff',
+  '.ttf': 'application/font-ttf',
+  '.eot': 'application/vnd.ms-fontobject',
+  '.otf': 'application/font-otf',
+  '.wasm': 'application/wasm'
+  ,'.ejs': 'text/html; charset=utf-8'
 },
 set: function set(setting, val) {
   if (arguments.length === 1) {
@@ -271,8 +328,18 @@ ejsRenderOld: function(response,filePath,fs,ejs,content,contentType){
       content =htmlRenderized;
   }
     response.end(content, 'utf-8');
-}
-
+},
+getCookie: function (name,cookie) {
+  //  console.log('cookie',name,cookie);
+  let matches;
+  if(cookie)
+      {    matches = cookie.match(new RegExp(
+              "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+         // console.log('matches',matches)
+          }
+    return matches ? decodeURIComponent(matches[1]) : undefined;
+  }
 }
 module.exports = app;
 methods.forEach(function(method){
@@ -293,6 +360,7 @@ return;
     return this;
   };
 });
+
 // function routerMethod(){
 //   var handles = flatten(slice.call(arguments));
 

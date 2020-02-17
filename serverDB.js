@@ -210,7 +210,7 @@ delHistory: function(callback,mesHistory) {
 getFilterUsers: function(callback,userId,strFilter) {
   
   let db = new sqlite3.Database(path);
-  console.log('strFilter',"select id,login , computer , fio, email,password,2 as nomOrder  from users where fio like '%" + strFilter + "%' union all select distinct -id, '','',chat,'','', 1 as nomOrder from chats where id in (select idChat from userInChat where idUser = " + userId +") order by nomOrder, fio ;",userId,strFilter);
+  //console.log('strFilter',"select id,login , computer , fio, email,password,2 as nomOrder  from users where fio like '%" + strFilter + "%' union all select distinct -id, '','',chat,'','', 1 as nomOrder from chats where id in (select idChat from userInChat where idUser = " + userId +") order by nomOrder, fio ;",userId,strFilter);
   db.all("select id,login , computer , fio, email,password,2 as nomOrder  from users where fio like '%" + strFilter + "%' union all select distinct -id, '','',chat,'','', 1 as nomOrder from chats where id in (select idChat from userInChat where idUser = " + userId +") order by nomOrder, fio ;", function(err, all) {
       callback(err, all);  
   });
@@ -252,15 +252,16 @@ function( done, email,password, password1,password2){
   }
   
   let db = new sqlite3.Database(path);
-  db.get("SELECT * FROM users WHERE email = ? and password = ? ", [email],[password],
+  db.get("SELECT * FROM users WHERE email = ?  and password = ? ", [email,password],
   function(err, row){
   if(err){
   console.log('err',err);
    return done(err);
   }
+  //console.log(row,"SELECT * FROM users WHERE email = ? and password = ? ", [email],[password]);
   
   if(!row){
-    msg ='Не правильный email или пароль! ';
+    msg ='Не правильный email или пароль! '+ email + password + ' '+ password1+ ' '+ password2;
        console.log('msg',msg);
         return done(null, false, msg);
   }
@@ -273,14 +274,54 @@ function( done, email,password, password1,password2){
     console.log('msg',msg);
     return done(null, user,msg);
   })
-  
   });
-  
-  
-  db.close();
-  
-  
-   }
+   db.close();
+    },
+register: 
+function(done,email,login,username,password1,password2)
+{
+  let db = new sqlite3.Database(path);
+  db.get("SELECT * FROM users WHERE email = ? ", [email],
+ function(err, row){
+  if(err){
+  console.log('err',err);
+   return done(err);
+  }  else
+// if(1==2)
+//let msg;
+  if(row){
+    msg ='Пользователь с таким  e-mail уже существует!'+ email;
+       console.log('msg',msg);
+        return done(null, false, msg);
+  } else
+  if(password1!=password2)
+  {
+    msg ='Пароль и подтверждение пароля не совпадают!';
+    console.log('msg',msg);
+    return done(null, false, msg);
+  } else
+  if(req.body.email.indexOf('@')==-1)
+  {
+    msg ='Неправильно заведен e-mail!';
+    console.log('msg',msg);
+    return done(null, false, msg);
+  } else
+  {
+    userDB = new Usr(
+      -1,
+      login,
+      username,
+      '',
+      email,
+      password1
+    );
+    serverDB.insertUser(function(err,UserDB ) {
+      return done(null, userDB);
+    },userDB);
+        
+  }
+});
+}
 }
 
 

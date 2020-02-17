@@ -100,11 +100,10 @@ function(cb,email,password)
    console.log("err login",err);
    cb(err,null);
   }
- console.log('Я тут!all',all);
+ //console.log('Я тут!all',all);
 
   let wsSend =
- 
-     JSON.stringify({
+      JSON.stringify({
        id:     all.id,
        email:  all.email,
        login:  all.login,

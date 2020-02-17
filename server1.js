@@ -1,4 +1,3 @@
-
 const port = 7000;
 const HOST = 'localhost';
 const WebSocket = require("ws");
@@ -11,7 +10,7 @@ let serverDB = require("./serverDB");
 let serverClass = require("./serverClass");
 process.env.ACCESS_TOKEN_SECRET ='a93c47d0633a030fd8c911c66c72d3c6cb296257b7983b7ef43cbe7e145afe9848053db936e7d59df54ab130b330267acf2ad1a5fb1ef8130ad074a2dc299162';
 process.env.REFRESH_TOKEN_SECRET ='b11a211eb190f326d28985e3e846ebefa6dcdcd0957dac02cd3aeacbb0f1c6b9f8091b57a157d0016a2fc340dd4aebab679f20f88b5c7a0e4392187c302146ad';
-//сессии
+// //сессии
 // let sessions = require("client-sessions");
 // var requestSessionHandler = sessions({
 //   cookieName: 'mySession', // cookie name dictates the key name added to the request object
@@ -19,9 +18,7 @@ process.env.REFRESH_TOKEN_SECRET ='b11a211eb190f326d28985e3e846ebefa6dcdcd0957da
 //   duration: 24 * 60 * 60 * 1000, // how long the session will stay valid in ms
 //   activeDuration: 1000 * 60 * 5 // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
 // });
-///
 
-app.init();
 // app.engine('ejs', function (filePath, options, callback) { // define the template engine
 //   fs.readFile(filePath, function (err, content) {
 //     if (err) return callback(new Error(err));
@@ -32,121 +29,57 @@ app.init();
 //   });
 // });
 
- app.set("views", __dirname + "/views");
- app.set("img", __dirname + "/img");
- app.set('view engine','ejs');
+//инициализация и настройки
+//app.init();
+//  app.set("views", __dirname + "/views");
+//  app.set("img", __dirname + "/img");
+//  app.set('view engine','ejs');
 
-//  app.get("/login", function(req, res) {
-//   console.log('app.get("/login/req.user',req.user);
-//   res.render("login.ejs", { user: req.user, message: ' ' , SelForm: 'formlogin', notUser: undefined});
-// });
-// Request handler for /greet end point.
+
 let _user;
 let usersOnline=[];
+
 const handleGreetRequest = (request, response) => {
-  request.logIn = function(user){
+  //инициализация и настройки
+  app.init(request, response) ;
+  app.set("views", __dirname + "/views");
+  app.set("img", __dirname + "/img");
+  app.set('view engine','ejs');
+ 
 
-    const sessionID = getCookie('session-id',request.headers.cookie);
-    const cookieToken =  getCookie('csrf-token',request.headers.cookie);
-    console.log('user',user);
-    if(user)
-    { 
-     
-      console.log("зарегистрировано с действительными учетными данными");
-
-      // Generating Session ID and Token
-      const SESSION_ID = process.env.REFRESH_TOKEN_SECRET;
-      const CSRF_TOKEN = process.env.ACCESS_TOKEN_SECRET;
-      if (!sessionID && !cookieToken) {
-        console.log(`Generated Session ID: ${SESSION_ID}, CSRF Token: ${CSRF_TOKEN}`);
-        // Setting Cookie on Header
-        // response.setHeader('Set-Cookie', [JSON.stringify({sessionid: SESSION_ID, time: Date.now(), csrftoken: CSRF_TOKEN})]);
-        response.setHeader('Set-Cookie', [`session-id=${SESSION_ID}`, `time=${Date.now()}`, `csrf-token=${CSRF_TOKEN}`]);
-    } else {
-        console.log('POST /home Some Session ID and CSRF Token Found')
-    }
-   
-    if(usersOnline.findIndex(x => x.id==user.id) ===-1)
-    {usersOnline.push(user);}
-    _user = JSON.parse(user) ;
-  // console.log('request.user!!!!!!!!!!!!!!!',_user,user);
-    response.redirect("/");
-  //   console.log('request.user---!!!!!!!!!!!!!!!',request.user);
-
-        
-    }
-    };
-    request.logout = function()
-    {
-      request.headers.cookie = null;
-      _user = null;
-     // ws.user = null;
-    }
-  
+  //разборка/определение url
 let filePath = '.' + request.url;
- //let extname = String(path.extname(filePath)).toLowerCase();
-
-    filePath = app.dispatch(request.url,'');
+ let extname = String(path.extname(request.url)).toLowerCase();
 //console.log('filePath',filePath);
+
+
+ //выход
  if(filePath.includes('logout')) 
- {
-  request.logout();
-   filePath = './index.html';}
+ {  request.logout(_user);
+   filePath = './index.html';
+   }
+  filePath = app.dispatch(request.url,extname);
+  //console.log('filePathLog',filePath),filePath.includes('logout');
+   
  
    extname = String(path.extname(filePath)).toLowerCase();
-   console.log('extname',extname,filePath)
-    let mimeTypes = {
-        '.html': 'text/html',
-        '.js': 'text/javascript',
-        '.css': 'text/css',
-        '.json': 'application/json',
-        '.png': 'image/png',
-        '.jpg': 'image/jpg',
-        '.gif': 'image/gif',
-        '.svg': 'image/svg+xml',
-        '.wav': 'audio/wav',
-        '.mp4': 'video/mp4',
-        '.woff': 'application/font-woff',
-        '.ttf': 'application/font-ttf',
-        '.eot': 'application/vnd.ms-fontobject',
-        '.otf': 'application/font-otf',
-        '.wasm': 'application/wasm'
-        ,'.ejs': 'text/html; charset=utf-8'
-    };
-    //console.log('mimeTypes[extname]',extname,mimeTypes[extname]);
-   // let contentType = mimeTypes[extname] || 'application/octet-stream';
-   let contentType = mimeTypes[extname] || 'text/html; charset=utf-8';
-    console.log('contentType',contentType );
+   let contentType = app.mimeTypes[extname] || 'text/html; charset=utf-8';
 
-    function getCookie(name,cookie) {
-    //  console.log('cookie',name,cookie);
-    let matches;
-    if(cookie)
-        {    matches = cookie.match(new RegExp(
-                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-              ));
-           // console.log('matches',matches)
-            }
-      return matches ? decodeURIComponent(matches[1]) : undefined;
-    }
-
+//POST login
     if (request.method === 'POST') {
      // console.log('POST url',request.url)
      if(request.url == "/login")
         {    app.postForm(request, function(err,body){
               if(err){console.log(err);return;}
-              //console.log(body, body.email);
               serverClass.login(function(err,user){
-                //console.log('serverClass.login',user);
                 if (err) {
                   console.log(err);
                   return;
                 }
                 console.log('u',user,!user);
                 if (!user) {
-console.log('filePath/login',filePath)
                   content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: undefined, message: "Укажите правильный email или пароль!", SelForm: 'formlogin', notUser: undefined});
-                  console.log('content',contentType);
+               //   console.log('content',contentType);
                   app.Render(response,content,contentType);
 
                   return;
@@ -154,59 +87,80 @@ console.log('filePath/login',filePath)
                 else
                 request.logIn(user);
 
+                if(usersOnline.findIndex(x => x.id==user.id) ===-1)
+                {usersOnline.push(user);}
+                _user = JSON.parse(user) ;
+                response.redirect("/");
               },body.email,body.password)
           })
+        } else
+    if(request.url == "/change")
+    {
+      app.postForm(request, function(err,body)
+      {
+        if(err){console.log(err);return;}
+      
+        serverDB.change(function(err,user,msg){
+          //console.log('serverClass.login',user);
+          if (err) {
+            console.log(err);
+            return;
+          }
+
+          if (!user) {
+              content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: undefined, message: msg, SelForm: 'formchange', notUser: body});
+            console.log('content',contentType);
+            app.Render(response,content,contentType);
+              return;
+          }
+          else
+          {
+              content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: user, message: msg, SelForm: 'formchange', notUser: undefined});
+            console.log('content',contentType);
+            app.Render(response,content,contentType);
+
+          }
+        },body.email,body.password,body.password1,body.password2,)
+
+      })
+        } else
+    if(request.url == "/register")
+    {
+      app.postForm(request, function(err,body)
+      {
+        if(err){console.log(err);return;}
+      
+        serverDB.register(function(err,user,msg){
+          //console.log('serverClass.login',user);
+          if (err) {
+            console.log(err);
+            return;
+          }
+
+          if (!user) {
+              content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: undefined, message: msg, SelForm: 'formregister', notUser: body});
+            console.log('content',contentType);
+            app.Render(response,content,contentType);
+              return;
+          }
+          else
+          {
+              content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: user, message: msg, SelForm: 'formregister', notUser: undefined});
+            console.log('content',contentType);
+            app.Render(response,content,contentType);
+
+          }
+        },body.email,body.login,body.username,body.password1,body.password2)
+
+      })
         }
-            if(request.url == "/change")
-            {
-              filePath= "./views/login.ejs";
-             // console.log('filePathChange',contentType);
-
-              app.postForm(request, function(err,body)
-              {
-                if(err){console.log(err);return;}
-              
-                serverDB.change(function(err,user,msg){
-                  //console.log('serverClass.login',user);
-                  if (err) {
-                    console.log(err);
-                    return;
-                  }
-                  if (!user) {
-  
-                    content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: undefined, message: msg, SelForm: 'formchange', notUser: body});
-                    console.log('content',contentType);
-                    app.Render(response,content,contentType);
-  
-                    return;
-                  }
-                  else
-                  {
-  
-                    content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: user, message: msg, SelForm: 'formchange', notUser: undefined});
-                    console.log('content',contentType);
-                    app.Render(response,content,contentType);
-
-                  }
-                },body.email,body.password,body.password1,body.password2,)
-
-              })
-            }
   }
   else
-    // if(filePath == './views/login' )
-    //   {console.log('Я тут!!!');}
  { 
- // console.log( ' Get session-id', request.headers.cookie,getCookie('session-id',request.headers.cookie));
-//   console.log( ' Get session-id', JSON.parse(request.headers.cookie.JSON));
 
-  // const sessionID = request.cookies['session-id'];
-  // const cookieToken = request.cookies['csrf-token'];
-  const sessionID = getCookie('session-id',request.headers.cookie);
-  const cookieToken =  getCookie('csrf-token',request.headers.cookie);
+  const sessionID = app.getCookie('session-id',request.headers.cookie);
+  const cookieToken =  app.getCookie('csrf-token',request.headers.cookie);
 
- // console.log('filePath',filePath);
-//  if(filePath.includes('logout')) filePath = '/';
   if (sessionID && cookieToken) 
   {
    console.log("GET Сессия и токен найдены !" );
