@@ -25,7 +25,7 @@ function lookupOrCreate(req,opts){
 
   function idFromRequest(req,opts){var m
     // ищем существующий SID в заголовке Cookie, для которого у нас есть сеанс
-    console.log('req.headers.cookie',req.headers.cookie,'sesions',sessions);
+   // console.log('req.headers.cookie',req.headers.cookie,'sesions',sessions);
     if(req.headers.cookie
     && (m = /SID=([^ ,;]*)/.exec(req.headers.cookie))
     && ownProp(sessions,m[1])){

@@ -24,6 +24,7 @@ exports.session = function( request, response, callback ){
 // устанавливаем заголовок ответа, чтобы установить cookie для текущего сеанса
    // это сделано для того, чтобы клиент мог передавать информацию cookie для последующих запросов
   response.setHeader('Set-Cookie', session.getSetCookieHeaderValue());
+  console.log('Set-Cookie', session.getSetCookieHeaderValue());
 // в дополнение к настройке объекта ответа, мы также установим новый
    // свойство по запросу "session", это сделано для того, чтобы мы могли легко
    // ссылаемся на объект сеанса в других местах
@@ -48,8 +49,9 @@ exports.session = function( request, response, callback ){
       // Monkey punch the http server
       let server = Object.create(orig);
  
-      server.listen = function (port) { 
-        orig.listen(Number(port)); 
+      server.listen = function (port,cb) { 
+        orig.listen(Number(port));
+        cb();
       };
   
       return server;

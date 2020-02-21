@@ -7,7 +7,8 @@ let path = require('path');
 let app = require('./myExpress');
 let ejs = require('ejs');
 let serverDB = require("./serverDB");
-let serverClass = require("./serverClass");
+let serverClass = require("./serverClass")
+,    session = require('./sessions/core').magicSession();
 // process.env.ACCESS_TOKEN_SECRET ='a93c47d0633a030fd8c911c66c72d3c6cb296257b7983b7ef43cbe7e145afe9848053db936e7d59df54ab130b330267acf2ad1a5fb1ef8130ad074a2dc299162';
 // process.env.REFRESH_TOKEN_SECRET ='b11a211eb190f326d28985e3e846ebefa6dcdcd0957dac02cd3aeacbb0f1c6b9f8091b57a157d0016a2fc340dd4aebab679f20f88b5c7a0e4392187c302146ad';
 // //сессии
@@ -58,11 +59,12 @@ let filePath = '.' + request.url;
  {  request.logout(_user);
   //request.headers.cookie = null;
   _user = null;
-  console.log('logout', _user);
+  console.log('logout', request.session.data.user);
   //filePath = './index.html';
    }
   filePath = app.dispatch(request.url,extname);
- console.log('filePathLog',filePath),filePath.includes('logout');
+// console.log('filePathLog',filePath);
+ //console.log ('request.session',request.session);
    
  
    extname = String(path.extname(filePath)).toLowerCase();
@@ -89,6 +91,7 @@ let filePath = '.' + request.url;
                 }
                 else
                 request.logIn(user);
+                console.log('login', request.session.data.user);
 
                 if(usersOnline.findIndex(x => x.id==user.id) ===-1)
                 {usersOnline.push(user);}
