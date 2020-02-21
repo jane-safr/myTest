@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>JS Router</title>
+</head>
+<body>
+
+    <div id="links">
+        <a href="/">Gallery</a>
+        <a href="/article/234019/kiazim">Article #234019</a>
+        <a href="/company/cartofan/post/2312">Cartofan Blog</a>
+    </div>
+
+   
+    <script src="src/router.js"></script>
+    <script>
+   
+        // инициализируем роутер
+        Router.init();
+       
+        // запускаем главную страницу
+        Router.dispatch('/');
+
+        // обработчик нажатий на ссылки
+        let handler = event =>  {
+           
+            // получаем запрошенный url
+            let url = new URL(event.currentTarget.href);
+           
+            // запускаем роутер, предавая ему path
+            Router.dispatch(url.pathname);
+           
+            // запрещаем дальнейший переход по ссылке
+            event.preventDefault();
+        }
+
+        // получаем все ссылки на странице
+        let anchors = document.querySelectorAll('a');
+       
+        // вешаем на событие onclick обработчик
+        for( let anchor of anchors ) anchor.onclick = handler;
+       
+    </script>
+</body>
+</html>
