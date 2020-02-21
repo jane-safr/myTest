@@ -32,28 +32,29 @@ let app={
       // Функции регистрация /выход пользователя
   request.logIn = function(user){
 
-    const sessionID = app.getCookie('session-id',request.headers.cookie);
-    const cookieToken =  app.getCookie('csrf-token',request.headers.cookie);
+    // const sessionID = app.getCookie('session-id',request.headers.cookie);
+    // const cookieToken =  app.getCookie('csrf-token',request.headers.cookie);
    // console.log('user',user);
-    if(user)
-    { 
+    // if(user)
+    // { 
      
-      console.log("зарегистрировано с действительными учетными данными");
+    //   console.log("зарегистрировано с действительными учетными данными");
 
-      // Generating Session ID and Token
-      const SESSION_ID = process.env.REFRESH_TOKEN_SECRET;
-      const CSRF_TOKEN = process.env.ACCESS_TOKEN_SECRET;
-      if (!sessionID && !cookieToken) {
-        console.log(`Generated Session ID: ${SESSION_ID}, CSRF Token: ${CSRF_TOKEN}`);
-        response.setHeader('Set-Cookie', [`session-id=${SESSION_ID}`, `time=${Date.now()}`, `csrf-token=${CSRF_TOKEN}`]);
-    } else {
-        console.log('POST /home Some Session ID and CSRF Token Found')
-    }
-    }
+    //   // Generating Session ID and Token
+    //   const SESSION_ID = process.env.REFRESH_TOKEN_SECRET;
+    //   const CSRF_TOKEN = process.env.ACCESS_TOKEN_SECRET;
+    //   if (!sessionID && !cookieToken) {
+    //     console.log(`Generated Session ID: ${SESSION_ID}, CSRF Token: ${CSRF_TOKEN}`);
+    //     response.setHeader('Set-Cookie', [`session-id=${SESSION_ID}`, `time=${Date.now()}`, `csrf-token=${CSRF_TOKEN}`]);
+    // } else {
+    //     console.log('POST /home Some Session ID and CSRF Token Found')
+    // }
+    // }
     };
   request.logout = function(user)    {
-      request.headers.cookie = null;
+     // request.headers.cookie = null;
       user = null;
+     console.log('response',response);
      // ws.user = null;
     }
     //this.set('views', resolve('views'));

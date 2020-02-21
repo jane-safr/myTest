@@ -1,7 +1,7 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = __dirname + "\\users.db";
-module.exports =
-{
+
+sdb ={
 
 getUsersSQLite: function(callback,userId) {
   
@@ -300,23 +300,23 @@ function(done,email,login,username,password1,password2)
     console.log('msg',msg);
     return done(null, false, msg);
   } else
-  if(req.body.email.indexOf('@')==-1)
+  if(email.indexOf('@')==-1)
   {
     msg ='Неправильно заведен e-mail!';
     console.log('msg',msg);
     return done(null, false, msg);
   } else
   {
-    userDB = new Usr(
-      -1,
-      login,
-      username,
-      '',
+    userDB = {
+      id : -1,
+      login: login,
+      fio: username,
+      computer:'',
       email,
-      password1
-    );
-    serverDB.insertUser(function(err,UserDB ) {
-      return done(null, userDB);
+      password: password1
+    };
+    sdb.insertUser(function(err,UserDB ) {
+      return done(null, userDB,'Пользователь создан');
     },userDB);
         
   }
@@ -324,6 +324,7 @@ function(done,email,login,username,password1,password2)
 }
 }
 
+module.exports = sdb;
 
 function RefChat(db,idChat,row,usersInChat,callback)
 {

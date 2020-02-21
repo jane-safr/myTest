@@ -1,15 +1,15 @@
 const port = 7000;
 const HOST = 'localhost';
 const WebSocket = require("ws");
-let http = require('http');
+//let http = require('http');
 let fs = require('fs');
 let path = require('path');
 let app = require('./myExpress');
 let ejs = require('ejs');
 let serverDB = require("./serverDB");
 let serverClass = require("./serverClass");
-process.env.ACCESS_TOKEN_SECRET ='a93c47d0633a030fd8c911c66c72d3c6cb296257b7983b7ef43cbe7e145afe9848053db936e7d59df54ab130b330267acf2ad1a5fb1ef8130ad074a2dc299162';
-process.env.REFRESH_TOKEN_SECRET ='b11a211eb190f326d28985e3e846ebefa6dcdcd0957dac02cd3aeacbb0f1c6b9f8091b57a157d0016a2fc340dd4aebab679f20f88b5c7a0e4392187c302146ad';
+// process.env.ACCESS_TOKEN_SECRET ='a93c47d0633a030fd8c911c66c72d3c6cb296257b7983b7ef43cbe7e145afe9848053db936e7d59df54ab130b330267acf2ad1a5fb1ef8130ad074a2dc299162';
+// process.env.REFRESH_TOKEN_SECRET ='b11a211eb190f326d28985e3e846ebefa6dcdcd0957dac02cd3aeacbb0f1c6b9f8091b57a157d0016a2fc340dd4aebab679f20f88b5c7a0e4392187c302146ad';
 // //сессии
 // let sessions = require("client-sessions");
 // var requestSessionHandler = sessions({
@@ -50,16 +50,19 @@ const handleGreetRequest = (request, response) => {
   //разборка/определение url
 let filePath = '.' + request.url;
  let extname = String(path.extname(request.url)).toLowerCase();
-//console.log('filePath',filePath);
+//console.log('request.getSession()',request.getSession());
 
 
  //выход
  if(filePath.includes('logout')) 
  {  request.logout(_user);
-   filePath = './index.html';
+  //request.headers.cookie = null;
+  _user = null;
+  console.log('logout', _user);
+  //filePath = './index.html';
    }
   filePath = app.dispatch(request.url,extname);
-  //console.log('filePathLog',filePath),filePath.includes('logout');
+ console.log('filePathLog',filePath),filePath.includes('logout');
    
  
    extname = String(path.extname(filePath)).toLowerCase();
@@ -145,7 +148,8 @@ let filePath = '.' + request.url;
           }
           else
           {
-              content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: user, message: msg, SelForm: 'formregister', notUser: undefined});
+            console.log('formregisterRender');
+              content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: user, message: msg, SelForm: 'formregister', notUser: body});
             console.log('content',contentType);
             app.Render(response,content,contentType);
 
@@ -158,19 +162,19 @@ let filePath = '.' + request.url;
   else
  { 
 
-  const sessionID = app.getCookie('session-id',request.headers.cookie);
-  const cookieToken =  app.getCookie('csrf-token',request.headers.cookie);
+  // const sessionID = app.getCookie('session-id',request.headers.cookie);
+  // const cookieToken =  app.getCookie('csrf-token',request.headers.cookie);
 
-  if (sessionID && cookieToken) 
-  {
-   console.log("GET Сессия и токен найдены !" );
- //  res.sendFile('views/form.html', {root: __dirname});
+//   if (sessionID && cookieToken) 
+//   {
+//    console.log("GET Сессия и токен найдены !" + filePath );
+//  //  res.sendFile('views/form.html', {root: __dirname});
  
-   } else {
+//    } else {
 
-    if(!filePath.includes('css')) filePath = './views/login.ejs';
-           console.log("GET Сессия и токен не найдены!" + filePath);
-   }
+ //   if(!filePath.includes('css')) filePath = './views/login.ejs';
+         //  console.log("GET Сессия и токен не найдены!" + filePath);
+ //  }
    fs.readFile(filePath, function(error, content) {
   // console.log(content);
       if (error) {
@@ -332,6 +336,7 @@ console.log("server.on(connection)");
       try
       {
        usersOnline.splice( usersOnline.findIndex(x => x.id==ws.user.id), 1 );
+       console.log('request.logout()')
        request.logout();
        ws.user = null;
       }
