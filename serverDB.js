@@ -210,13 +210,13 @@ delHistory: function(callback,mesHistory) {
 getFilterUsers: function(callback,userId,strFilter) {
   
   let db = new sqlite3.Database(path);
-  //console.log('strFilter',"select id,login , computer , fio, email,password,2 as nomOrder  from users where fio like '%" + strFilter + "%' union all select distinct -id, '','',chat,'','', 1 as nomOrder from chats where id in (select idChat from userInChat where idUser = " + userId +") order by nomOrder, fio ;",userId,strFilter);
+  // console.log('strFilter',"select id,login , computer , fio, email,password,2 as nomOrder  from users where fio like '%" + strFilter + "%' union all select distinct -id, '','',chat,'','', 1 as nomOrder from chats where id in (select idChat from userInChat where idUser = " + userId +") order by nomOrder, fio ;",userId,strFilter);
   db.all("select id,login , computer , fio, email,password,2 as nomOrder  from users where fio like '%" + strFilter + "%' union all select distinct -id, '','',chat,'','', 1 as nomOrder from chats where id in (select idChat from userInChat where idUser = " + userId +") order by nomOrder, fio ;", function(err, all) {
       callback(err, all);  
   });
   db.close();
 },
-login: function( email, password, done){
+login: function( email, password,idSession, done){
  // console.log(path);
   let db = new sqlite3.Database(path);
   db.get("SELECT * FROM users WHERE email = ? ", [email],
@@ -229,6 +229,13 @@ login: function( email, password, done){
     console.log('Incorrect email '+ email);
    return done(null, false);
   }
+  console.log(`UPDATE users SET idSession = ?  where email = ?`, [idSession,email]);
+  db.run(`UPDATE users SET idSession = ?  where email = ?`, [idSession,email], function(err) {
+    if (err) {
+      return console.log('err update session',err.message);
+    }
+  })
+if(password == null)return done(null, false);
 
   if(row.password!=password)
   { console.log('Incorrect password ' + password);
@@ -321,6 +328,21 @@ function(done,email,login,username,password1,password2)
         
   }
 });
+},
+loginFromSession: function( idSession, done){
+ // console.log(path);
+  let db = new sqlite3.Database(path);
+  db.get("SELECT * FROM users WHERE idSession = ? ", [idSession],
+ function(err, row){
+  if(err){
+  console.log('err',err);
+   return done(err);
+  }
+  let user= row;
+  
+  return done(null, user);
+  db.close();
+ });
 }
 }
 

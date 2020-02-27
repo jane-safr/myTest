@@ -25,10 +25,12 @@ function lookupOrCreate(req,opts){
 
   function idFromRequest(req,opts){var m
     // ищем существующий SID в заголовке Cookie, для которого у нас есть сеанс
-   // console.log('req.headers.cookie',req.headers.cookie,'sesions',sessions);
+   //console.log('req.headers.cookie',req.headers.cookie);
+   console.log('kkkkkkkkk',( /SID=([^ ,;]*)/.exec(req.headers.cookie)[1]));
     if(req.headers.cookie
     && (m = /SID=([^ ,;]*)/.exec(req.headers.cookie))
-    && ownProp(sessions,m[1])){
+    //&& ownProp(sessions,m[1])
+    ){
       return m[1]}
   
     // в противном случае нам нужно создать
@@ -61,7 +63,7 @@ function randomString(bits){var chars,rand,i,ret
   return ret}   
   
   function Session(id,opts){
-    console.log('opts',opts);
+   // console.log('opts',opts);
     this.id=id
     this.data={}
     this.path=opts.path||'/'
@@ -96,6 +98,7 @@ Session.prototype.getSetCookieHeaderValue=function(){let parts
   function pad(n){return n>9 ? ''+n : '0'+n}
 
   Session.prototype.destroy=function(){
+    console.log('delete sessions')
     delete sessions[this.id]}
   
   Session.prototype.serialize // unimplemented, but would store the session on disk

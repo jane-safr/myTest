@@ -10,6 +10,8 @@ exports.session = function( request, response, callback ){
     // сеансы определяются путем поиска request.headers ["Set-Cookie"] по хешу наших сеансов
    session = sessions.lookupOrCreate(request,{
      lifetime:604800
+    //  ,
+    //  sessionID: 'u1mNwZEpCLc'
    });
 // реализуем базовую историю для каждого сеанса, помните об этом, так как это может поглотить память при высокой загрузке
 
@@ -24,7 +26,7 @@ exports.session = function( request, response, callback ){
 // устанавливаем заголовок ответа, чтобы установить cookie для текущего сеанса
    // это сделано для того, чтобы клиент мог передавать информацию cookie для последующих запросов
   response.setHeader('Set-Cookie', session.getSetCookieHeaderValue());
-  console.log('Set-Cookie', session.getSetCookieHeaderValue());
+ // console.log('Set-Cookie', session.getSetCookieHeaderValue());
 // в дополнение к настройке объекта ответа, мы также установим новый
    // свойство по запросу "session", это сделано для того, чтобы мы могли легко
    // ссылаемся на объект сеанса в других местах

@@ -4,7 +4,7 @@ let http = require('http')
 
 // let's create a basic http server!
 http.createServer(function (request, response) {
-  console.log ('request.session',request.session);
+  console.log ('request.session.createServer',request.session);
     // please note: this is just an example of how to hook auth into session.js, its not ideal at all
   
     // super basic logout

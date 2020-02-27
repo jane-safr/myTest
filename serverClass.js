@@ -28,7 +28,7 @@ insertUserInChat: function(cb,message, _idChat,_user)
 checkUsersInChat:
 function(cb, message)
 {
- console.log("checkUsersInChatStart");
+console.log("checkUsersInChatStart");
  serverDB.getUsersInChat(function(err, all) {
   if (err) {
    console.log("checkUsersInChat");
@@ -73,18 +73,16 @@ function(cb, message)
 getFilterUsers:
 function(cb, message,idChat,userId)
 {
-  console.log("serverClass.getFilterUsers",userId);
+ //console.log("serverClass.getFilterUsers",userId);
  serverDB.getFilterUsers(function(err, all) {
   if (err) {
    console.log("err getFilterUsers1",err);
    cb(err,null);
   }
   let wsSend =
- 
-     JSON.stringify({
+      JSON.stringify({
        cell:  "users",
        message:  all
-
      })
  
    cb('',null,wsSend);
@@ -92,10 +90,10 @@ function(cb, message,idChat,userId)
 
 },
 login:
-function(cb,email,password)
+function(cb,email,password,idSession)
 {
- // console.log('Я тут!',email,password);
- serverDB.login(email,password,function(err, all) {
+console.log('Я тут!',email,password,idSession);
+ serverDB.login(email,password,idSession,function(err, all) {
   if (err) {
    console.log("err login",err);
    cb(err,null);

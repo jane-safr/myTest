@@ -7,8 +7,10 @@ let path = require('path');
 let app = require('./myExpress');
 let ejs = require('ejs');
 let serverDB = require("./serverDB");
-let serverClass = require("./serverClass")
-,    session = require('./sessions/core').magicSession();
+let serverClass = require("./serverClass");
+let  session = require('./sessions/core').magicSession();
+
+
 // process.env.ACCESS_TOKEN_SECRET ='a93c47d0633a030fd8c911c66c72d3c6cb296257b7983b7ef43cbe7e145afe9848053db936e7d59df54ab130b330267acf2ad1a5fb1ef8130ad074a2dc299162';
 // process.env.REFRESH_TOKEN_SECRET ='b11a211eb190f326d28985e3e846ebefa6dcdcd0957dac02cd3aeacbb0f1c6b9f8091b57a157d0016a2fc340dd4aebab679f20f88b5c7a0e4392187c302146ad';
 // //сессии
@@ -36,11 +38,31 @@ let serverClass = require("./serverClass")
 //  app.set("img", __dirname + "/img");
 //  app.set('view engine','ejs');
 
-
+let mySession;
 let _user;
 let usersOnline=[];
 
 const handleGreetRequest = (request, response) => {
+  //сессия
+  mySession = request.session;
+  console.log('mySession',mySession);
+ // if(mySession)
+  serverDB.loginFromSession(mySession.id,function(err, all) {
+    if (err) {
+     console.log("err loginFromSession",err);
+     cb(err,null);
+    }
+    if(all)
+    {    _user =
+      {
+        id:     all.id,
+        email:  all.email,
+        login:  all.login,
+        fio:   all.fio
+        };}
+
+        // _user = all?wsSend:null;
+    })
   //инициализация и настройки
   app.init(request, response) ;
   app.set("views", __dirname + "/views");
@@ -56,16 +78,23 @@ let filePath = '.' + request.url;
 
  //выход
  if(filePath.includes('logout')) 
- {  request.logout(_user);
+ { mySession = null; 
+   request.logout();
   //request.headers.cookie = null;
-  _user = null;
+  // = null;
   console.log('logout', request.session.data.user);
   //filePath = './index.html';
    }
   filePath = app.dispatch(request.url,extname);
 // console.log('filePathLog',filePath);
- //console.log ('request.session',request.session);
-   
+//let session1 = require('./sessions/core').session;
+//mySession = request.session;
+//console.log('mySession',mySession);
+if(request.session.data.user)
+{
+   _user = JSON.parse(request.session.data.user);
+  // console.log ('dispatch',_user);
+  }
  
    extname = String(path.extname(filePath)).toLowerCase();
    let contentType = app.mimeTypes[extname] || 'text/html; charset=utf-8';
@@ -74,14 +103,15 @@ let filePath = '.' + request.url;
     if (request.method === 'POST') {
      // console.log('POST url',request.url)
      if(request.url == "/login")
-        {    app.postForm(request, function(err,body){
+        { //console.log('mySession.id',mySession.id)   ;
+          app.postForm(request, function(err,body){
               if(err){console.log(err);return;}
               serverClass.login(function(err,user){
                 if (err) {
                   console.log(err);
                   return;
                 }
-                console.log('u',user,!user);
+               // console.log('u',user,!user);
                 if (!user) {
                   content = ejs.render(fs.readFileSync(filePath, 'utf8'), {filename: 'login',  user: undefined, message: "Укажите правильный email или пароль!", SelForm: 'formlogin', notUser: undefined});
                //   console.log('content',contentType);
@@ -90,14 +120,18 @@ let filePath = '.' + request.url;
                   return;
                 }
                 else
-                request.logIn(user);
-                console.log('login', request.session.data.user);
+                //_user = user;
+                 request.logIn(user);
+                
+                //mySession = request.session;
+                console.log('login', mySession.data.user);
 
                 if(usersOnline.findIndex(x => x.id==user.id) ===-1)
-                {usersOnline.push(user);}
-                _user = JSON.parse(user) ;
+                {usersOnline.push(JSON.parse(user));}
+                console.log('usersOnlinePush',usersOnline)
+                //_user= JSON.parse(user) ;
                 response.redirect("/");
-              },body.email,body.password)
+              },body.email,body.password,mySession.id)
           })
         } else
     if(request.url == "/change")
@@ -219,6 +253,7 @@ const onRequest = (req, res) => {
         }
         if(!req.cookies)
         {req.cookies = [];}
+        //console.log('req.session', req.session);
     handleGreetRequest(req, res);
   } else {
     res.statusCode = 404;
@@ -226,6 +261,29 @@ const onRequest = (req, res) => {
   }
 };
 ///WebSocket
+
+let cookie_date = new Date().toGMTString(); 
+const server =  new WebSocket.Server({
+  port,
+    verifyClient: (info, done) => {
+   //  info.req.session = mySession;
+    //  console.log('info.req.session', info.req.session.data,session1);
+    done(mySession);
+     // done(true);
+
+   // sessionParser(info.req, {}, () => {
+     // done(info.req.session);
+   // });
+  },
+  // verifyClient: (info, done) => {
+  //   console.log('req.session',req.session);
+  //   //done( req.session);
+  //   // sessionParser(info.req, {}, () => {
+  //   //   done(info.req.session);
+  //   // });
+  // },
+  noServer: false
+});
 //let serverClass = require("./serverClass");
 
 // const session = require("express-session");
@@ -240,19 +298,26 @@ const onRequest = (req, res) => {
 //   resave: true,
 //   saveUninitialized: true
 // });
-const server = new WebSocket.Server({
-  port,
-  // verifyClient: (info, done) => {
-  //   sessionParser(info.req, {}, () => {
-  //     done(info.req.session);
-  //   });
-  // },
-  noServer: false
-});
+
+// const server = new WebSocket.Server({
+//   port,
+//   //   verifyClient: (info, done) => {
+//   //    console.log('info.req.session', info.req.session,done, info)
+//   //  // sessionParser(info.req, {}, () => {
+//   //    // done(info.req.session);
+//   //  // });
+//   // },
+//   verifyClient: (info, done) => {
+//     sessionParser(info.req, {}, () => {
+//       done(info.req.session);
+//     });
+//   },
+//   noServer: false
+// });
 let _idChat = 0;
 
 server.on("connection", function(ws, request) {
-console.log("server.on(connection)");
+//console.log("server.on(connection)");
   let commands = {};
   //добавление/изменение пользователей в чате
   commands.insertUserInChat=  serverClass.insertUserInChat;
@@ -286,6 +351,7 @@ console.log("server.on(connection)");
         if(idChat) { _idChat = idChat;} else {_idChat=0;}
         if(wsSend) 
          {
+          console.log('usersOnlineSend',usersOnline)
           if (message.act == 'getFilterUsers')
                {
                 wsSend = JSON.parse(wsSend); 
@@ -304,7 +370,7 @@ console.log("server.on(connection)");
          if (client.readyState === WebSocket.OPEN) {
             if ( message.online || client.user.id == ws.user.id || message.usersSend.split(',').findIndex(x => x==client.user.id)  !=-1) 
                 {  
-                  console.log('рассылка', client.user.id);
+                 // console.log('рассылка', client.user.id);
                 client.send(
                   JSON.stringify({
                     cell: "form",
@@ -338,9 +404,19 @@ console.log("server.on(connection)");
     {
       try
       {
+        console.log(  'usersOnlineBefore',usersOnline);
        usersOnline.splice( usersOnline.findIndex(x => x.id==ws.user.id), 1 );
+       console.log(  'usersOnlineAfter',usersOnline);
        console.log('request.logout()')
+       serverClass.login(function(err,user){
+        if (err) {
+          console.log(err);
+          return;
+        }
+       // response.redirect("/");
+      },ws.user.email,null,null)
        request.logout();
+       mySession = null; 
        ws.user = null;
       }
       catch
@@ -349,7 +425,7 @@ console.log("server.on(connection)");
    });
 
   // if (request.session.passport && ws.user != request.session.passport.user)
-  //console.log('request.user',request.user)
+//console.log('_user = user;',_user, ws.user)
   if(_user)ws.user =_user ;
     //пользователь зашел
     if (ws.user)
@@ -363,7 +439,8 @@ console.log("server.on(connection)");
         }));
         //добавление пользователя в usersOnline, если его там нет
         if(usersOnline.findIndex(x => x.id==ws.user.id) ===-1)
-        {usersOnline.push(ws.user);}
+        {usersOnline.push(ws.user);
+          console.log('usersOnlinePushWS',usersOnline)}
     }
     //заполнение таблицы пользователей
     //console.log('ws.user',ws.user);

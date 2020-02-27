@@ -1,6 +1,7 @@
 const status = document.getElementById("status");
 
 let user = null;
+const HOST = 'localhost:8125';
 //let usersOnline =[];
 cellsUsers =[];
 let checkboxes =[];
@@ -24,11 +25,11 @@ function printMessage(value) {
       user= change.user;
       welcome.innerHTML =  user.fio;
       logout.innerHTML =   ' Выйти';
-      logout.href = "http://"+login.host + '/logout';
+      logout.href = "http://"+HOST+ '/logout';
 
     }
     else
-    {logout.innerHTML = 'Войти'; welcome.innerHTML = ''; logout.href = "http://"+login.host + '/login'; }
+    {logout.innerHTML = 'Войти'; welcome.innerHTML = ''; logout.href = "http://"+HOST + '/login'; }
     return;
   }
   if(!user){return;}
