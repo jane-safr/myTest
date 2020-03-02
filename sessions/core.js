@@ -42,12 +42,28 @@ exports.session = function( request, response, callback ){
   
       // Create a new instance of a node HttpServer
       var orig = new http.Server(function(request, response){
+
+        request.logIn = function(user){
+
+          console.log('core_user',user,request.session.data.user);
+           if(request.session.data.user !=JSON.stringify(user))
+           { 
+            
+             console.log('Пользователь добавлен в сессию ', user,request.session.data.user,request.session.id);
+             request.session.data.user = JSON.stringify(user);
+           }
+           };
+        request.logout = function()    {
+          console.log("Пользователь удален из сессии",request.session.data.user,request.session.id);
+          request.session.data.user = null;
+        }
   
         exports.session(request, response, function(request, response){
           requestListener(request, response);
         });
       });
-  
+
+ 
       // Monkey punch the http server
       let server = Object.create(orig);
  

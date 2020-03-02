@@ -229,7 +229,7 @@ login: function( email, password,idSession, done){
     console.log('Incorrect email '+ email);
    return done(null, false);
   }
-  console.log(`UPDATE users SET idSession = ?  where email = ?`, [idSession,email]);
+ console.log(`UPDATE users SET idSession = ?  where email = ?`, [idSession,email]);
   db.run(`UPDATE users SET idSession = ?  where email = ?`, [idSession,email], function(err) {
     if (err) {
       return console.log('err update session',err.message);

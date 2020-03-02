@@ -23,7 +23,7 @@ let app={
   // },
   // engines: []
   // ,
-  init: function(request, response)  {
+  init: function()  {
     this.cache = {};
     this.engines = {};
     this.settings = {};
@@ -31,20 +31,20 @@ let app={
     this.defaultConfiguration();
       // Функции регистрация /выход пользователя
 
-  request.logIn = function(user){
+  // request.logIn = function(user){
 
-   console.log('user',user);
-    if(user)
-    { 
+  //  console.log('user',user);
+  //   if(user)
+  //   { 
      
-      console.log("зарегистрировано с действительными учетными данными");
-      request.session.data.user = user;
-    }
-    };
-  request.logout = function()    {
+  //     console.log("зарегистрировано с действительными учетными данными");
+  //     request.session.data.user = user;
+  //   }
+  //   };
+  // request.logout = function()    {
 
-     request.session.data.user = null;
-    }
+  //    request.session.data.user = null;
+  //   }
 
   },
   defaultConfiguration: function defaultConfiguration() {
