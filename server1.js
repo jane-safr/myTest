@@ -60,13 +60,13 @@ const handleGreetRequest = (request, response) => {
         login:  all.login,
         fio:   all.fio
         };
-        console.log("Сессия найдена",_user,mySession.id);
+        if(mySession) {console.log("Сессия найдена",_user,mySession.id);}
       }
       else 
       {
         console.log("Сессия не найдена",_user);
        if(mySession) {console.log("Сессия не найдена",mySession.id);}
-     // _user = null;
+      _user = null;
       }
 
         // _user = all?wsSend:null;
@@ -91,13 +91,14 @@ let filePath = '.' + request.url;
  if(filePath.includes('logout')) 
  { mySession = null; 
    request.logout();
-          serverClass.login(function(err,user){
-        if (err) {
-          console.log(err);
-          return;
-        }
-       // response.redirect("/");
-      },_user.email,null,null)
+   if(_user)
+      {          serverClass.login(function(err,user){
+              if (err) {
+                console.log(err);
+                return;
+              }
+            // response.redirect("/");
+            },_user.email,null,null)}
   //request.headers.cookie = null;
   // = null;
   console.log('logout', request.session.data.user,_user);
@@ -348,7 +349,8 @@ server.on("connection", function(ws, request) {
     {
          server.clients.forEach(client => {
          if (client.readyState === WebSocket.OPEN) {
-            if ( message.online || client.user.id == ws.user.id || message.usersSend.split(',').findIndex(x => x==client.user.id)  !=-1) 
+          console.log('рассылка сообщений пользователям',message, client.user,server.clients.size);
+            if ( client.user && (message.online || client.user.id == ws.user.id || message.usersSend.split(',').findIndex(x => x==client.user.id)  !=-1)) 
                 {  
                   console.log('рассылка', client.user.id);
                 client.send(
